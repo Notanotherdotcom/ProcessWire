@@ -43,16 +43,30 @@ class User extends Page {
 	 *
 	 */
 	public function hasRole($role) {
-		
-		$roles = $this->get('roles');
-		$has = false; 
-		
-		if(empty($roles)) {
-			// do nothing
-			
-		} else if(is_object($role) && $role instanceof Page) {
-			$has = $roles->has($role); 
-			
+
+        $roles = $this->get('roles');
+        $has = false;
+
+        if(empty($roles)) {
+            // do nothing
+
+        } else if(is_object($role) && $role instanceof Page) {
+            $has = $roles->has($role);
+
+        } else if(is_object($role) && $role instanceof PageArray) {
+            foreach ($role as $page) {
+                return $this->hasRole($page);
+            }
+
+        } else if(strpos($role, '|') !== false) {
+            $multiroles = explode('|', $role);
+            foreach ($multiroles as $singlerole) {
+                if ($this->hasRole($singlerole)) {
+                    $has = true;
+                    break;
+                }
+            }
+
 		} else if(ctype_digit("$role")) {
 			$role = (int) $role; 
 			foreach($roles as $r) {
@@ -63,7 +77,7 @@ class User extends Page {
 			}
 			
 		} else if(is_string($role)) {
-			foreach($roles as $r) {
+            foreach($roles as $r) {
 				if($r->name === $role) {
 					$has = true;
 					break;
